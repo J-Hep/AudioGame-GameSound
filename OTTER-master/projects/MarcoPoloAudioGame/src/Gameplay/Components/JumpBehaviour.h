@@ -1,5 +1,5 @@
 #pragma once
-#include "IComponent.h"
+#include "Gameplay/Components/IComponent.h"
 #include "Gameplay/Physics/RigidBody.h"
 
 /// <summary>

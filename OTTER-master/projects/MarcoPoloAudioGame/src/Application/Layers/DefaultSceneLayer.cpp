@@ -48,6 +48,7 @@
 #include "Gameplay/Components/MaterialSwapBehaviour.h"
 #include "Gameplay/Components/TriggerVolumeEnterBehaviour.h"
 #include "Gameplay/Components/SimpleCameraControl.h"
+#include "Gameplay/Components/MovementBehaviour.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -72,6 +73,8 @@
 #include "Application/Layers/ImGuiDebugLayer.h"
 #include "Application/Windows/DebugWindow.h"
 #include "Gameplay/Components/ShadowCamera.h"
+
+#include <time.h>
 
 DefaultSceneLayer::DefaultSceneLayer() :
 	ApplicationLayer()
@@ -393,12 +396,36 @@ void DefaultSceneLayer::_CreateScene()
 			RigidBody::Sptr physics = plane->Add<RigidBody>(/*static by default*/);
 			physics->AddCollider(BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f)))->SetPosition({ 0,0,-1 });
 		}
+		
+		GameObject::Sptr player = scene->CreateGameObject("Player");
+		{
+			MeshResource::Sptr wall = ResourceManager::CreateAsset<MeshResource>();
+			wall->AddParam(MeshBuilderParam::CreateCube(ZERO, ONE));
+			wall->GenerateMesh();
 
-#pragma endregion
+			player->Add<RenderComponent>()->SetMesh(wall)->SetMaterial(boxMaterial);
+			player->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			player->SetPostion(glm::vec3(0.0f,0.0f,1.0f));
 
-#pragma region Unused defaults
-	/*
-		// Add some walls :3
+			RigidBody::Sptr physics = player->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(BoxCollider::Create(glm::vec3(0.5f, 0.5f, 0.5f)))->SetPosition({ 0,0,0 });
+			physics->SetMass(1.0f);
+			physics->SetAngularVelocity(glm::vec3(0.0f));
+
+			player->Add<MovementBehaviour>();
+		}
+
+		srand(time(0));
+		GameObject::Sptr trigger = scene->CreateGameObject("Goal");
+		{
+			TriggerVolume::Sptr volume = trigger->Add<TriggerVolume>();
+			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(1.0f, 1.0f, 1.0f));
+			collider->SetPosition(glm::vec3(float(rand() % (39 + 1) - 20), float(rand() % (39 + 1) - 20), 1.0f));
+			volume->AddCollider(collider);
+
+			trigger->Add<TriggerVolumeEnterBehaviour>();
+		}
+
 		{
 			MeshResource::Sptr wall = ResourceManager::CreateAsset<MeshResource>();
 			wall->AddParam(MeshBuilderParam::CreateCube(ZERO, ONE));
@@ -406,29 +433,44 @@ void DefaultSceneLayer::_CreateScene()
 
 			GameObject::Sptr wall1 = scene->CreateGameObject("Wall1");
 			wall1->Add<RenderComponent>()->SetMesh(wall)->SetMaterial(whiteBrick);
-			wall1->SetScale(glm::vec3(20.0f, 1.0f, 3.0f));
-			wall1->SetPostion(glm::vec3(0.0f, 10.0f, 1.5f));
+			wall1->SetScale(glm::vec3(40.0f, 1.0f, 3.0f));
+			wall1->SetPostion(glm::vec3(0.0f, 20.0f, 1.5f));
+			RigidBody::Sptr physics = wall1->Add<RigidBody>();
+			physics->AddCollider(BoxCollider::Create(glm::vec3(20.0f, 0.5f, 1.5f)))->SetPosition({ 0,0,0 });
 			plane->AddChild(wall1);
 
 			GameObject::Sptr wall2 = scene->CreateGameObject("Wall2");
 			wall2->Add<RenderComponent>()->SetMesh(wall)->SetMaterial(whiteBrick);
-			wall2->SetScale(glm::vec3(20.0f, 1.0f, 3.0f));
-			wall2->SetPostion(glm::vec3(0.0f, -10.0f, 1.5f));
+			wall2->SetScale(glm::vec3(40.0f, 1.0f, 3.0f));
+			wall2->SetPostion(glm::vec3(0.0f, -20.0f, 1.5f));
+			RigidBody::Sptr physics2 = wall2->Add<RigidBody>();
+			physics->AddCollider(BoxCollider::Create(glm::vec3(20.0f, 0.5f, 1.5f)))->SetPosition({ 0,-40,0 });
 			plane->AddChild(wall2);
 
 			GameObject::Sptr wall3 = scene->CreateGameObject("Wall3");
 			wall3->Add<RenderComponent>()->SetMesh(wall)->SetMaterial(whiteBrick);
-			wall3->SetScale(glm::vec3(1.0f, 20.0f, 3.0f));
-			wall3->SetPostion(glm::vec3(10.0f, 0.0f, 1.5f));
+			wall3->SetScale(glm::vec3(1.0f, 40.0f, 3.0f));
+			wall3->SetPostion(glm::vec3(20.0f, 0.0f, 1.5f));
+			RigidBody::Sptr physics3 = wall3->Add<RigidBody>();
+			physics->AddCollider(BoxCollider::Create(glm::vec3(0.5f, 20.0f, 1.5f)))->SetPosition({ 20,-20,0 });
 			plane->AddChild(wall3);
 
 			GameObject::Sptr wall4 = scene->CreateGameObject("Wall4");
 			wall4->Add<RenderComponent>()->SetMesh(wall)->SetMaterial(whiteBrick);
-			wall4->SetScale(glm::vec3(1.0f, 20.0f, 3.0f));
-			wall4->SetPostion(glm::vec3(-10.0f, 0.0f, 1.5f));
+			wall4->SetScale(glm::vec3(1.0f, 40.0f, 3.0f));
+			wall4->SetPostion(glm::vec3(-20.0f, 0.0f, 1.5f));
+			RigidBody::Sptr physics4 = wall4->Add<RigidBody>();
+			physics->AddCollider(BoxCollider::Create(glm::vec3(0.5f, 20.0f, 1.5f)))->SetPosition({ -20,-20,0 });
 			plane->AddChild(wall4);
 		}
 
+#pragma endregion
+
+#pragma region Unused defaults
+	
+		// Add some walls :3
+		
+/*
 		GameObject::Sptr monkey1 = scene->CreateGameObject("Monkey 1");
 		{
 			// Set position in the scene
@@ -620,7 +662,7 @@ void DefaultSceneLayer::_CreateScene()
 
 #pragma region UI
 /////////////////////////// UI //////////////////////////////
-		GameObject::Sptr canvas = scene->CreateGameObject("UI Canvas");
+	/*	GameObject::Sptr canvas = scene->CreateGameObject("UI Canvas");
 		{
 			RectTransform::Sptr transform = canvas->Add<RectTransform>();
 			transform->SetMin({ 16, 16 });
@@ -652,7 +694,7 @@ void DefaultSceneLayer::_CreateScene()
 
 			canvas->AddChild(subPanel);
 		}
-
+		*/
 		GuiBatcher::SetDefaultTexture(ResourceManager::CreateAsset<Texture2D>("textures/ui-sprite.png"));
 		GuiBatcher::SetDefaultBorderRadius(8);
 
